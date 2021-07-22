@@ -66,12 +66,15 @@ def generate_cube(canvas_size, cube_size=100):
 
 
 if __name__ == '__main__':
+    delta_angle = pi / 8
+    for angle_z in range(1, 5):
+        for angle_xy in range(1, 5):
+            z_prj = array([cos(delta_angle * angle_xy) * sin(delta_angle * angle_z),
+                           sin(delta_angle * angle_xy) * sin(delta_angle * angle_z), cos(delta_angle * angle_z)])
 
-    mat = get_rotation_mat(array([0,0,1]), 
-                        array([cos(pi / 3) * sin(pi / 5), sin(pi / 3) * sin(pi / 5), cos(pi / 5)]))
-    print(mat)
-    inv_mat = mat.T
-    mat = torch.from_numpy(mat[np.newaxis, np.newaxis]).float()
-    cube = torch.from_numpy(generate_cube(256)[np.newaxis, np.newaxis]).float()
-    chi_rot1 = rotate(cube, mat)
-    nib.save(nib.Nifti1Image(chi_rot1.squeeze().numpy(), np.eye(4)), 'chi_rot.nii')
+            mat = get_rotation_mat(array([0,0,1]), z_prj)
+            print(mat)
+            mat = torch.from_numpy(mat[np.newaxis, np.newaxis]).float()
+            cube = torch.from_numpy(generate_cube(256)[np.newaxis, np.newaxis]).float()
+            cube_rot = rotate(cube, mat)
+            nib.save(nib.Nifti1Image(cube_rot.squeeze().numpy(), np.eye(4)), 'py_cube' + str(angle_z) + str(angle_xy) + '.nii')
