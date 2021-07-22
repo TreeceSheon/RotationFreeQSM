@@ -6,16 +6,16 @@ from handy.py_rotate import rotate
 
 class Hybrid(nn.Module):
 
-    def __init__(self):
+    def __init__(self, dipole_inv_model, deblurring_model):
         super(Hybrid, self).__init__()
-        self.unet = Unet(4, 16)
-        self.res_net = DeepResNet(1, 1)
+        self.model1 = dipole_inv_model
+        self.model2 = deblurring_model
 
     def forward(self, phi, rot, inv_rot, d_type):
         if d_type != 'pure':
             phi = rotate(phi, rot)
-        pred = self.unet(phi)
+        pred = self.model1(phi)
         if d_type != 'pure':
             pred = rotate(pred, inv_rot)
-            pred = self.res_net(pred)
+            pred = self.model2(pred)
         return pred
