@@ -10,22 +10,22 @@ import time
 
 
 def main(args):
-    print(args.is_hybrid)
     batch_size = args.batch_size
     device = torch.device('cuda')
-    path = Path('/scratch/itee/uqlguo3/data/')
-    file = 'augmented_data.txt'
-    # dataloader = DataLoader(TFIDataset(path, file), shuffle=True, batch_size=batch_size, drop_last=True)
-    # print('training data size: ' + str(len(dataloader) * batch_size))
-    if args.is_hybrid:
+    path = Path('G:\data\\tfi\\')
+    file = 'dataset/data.txt'
+    dataloader = DataLoader(TFIDataset(path, file), shuffle=True, batch_size=batch_size, drop_last=True)
+    print('training data size: ' + str(len(dataloader) * batch_size))
+    if args.hybrid:
         model_name = 'hybrid'
         model_dipole_inv = getattr(import_module('networks.unet'), 'Unet')(4, 16)
         deblur_model = args.deblur_model
-        deblur_model = getattr(import_module('network.' + deblur_model.lower()), deblur_model)
-        model = nn.DataParallel(Hybrid(model_dipole_inv, deblur_model).to(device))
+        deblur_model = getattr(import_module('networks.' + deblur_model.lower()), deblur_model)
+        model = nn.DataParallel(Hybrid(model_dipole_inv, deblur_model, args.joint).to(device))
     else:
         model_name = args.model
-        model = nn.DataParallel(eval(args.model)())
+        model = getattr(import_module('networks.' + model_name.lower()), model_name)()
+        model = nn.DataParallel(model)
     optimizer = torch.optim.Adam(model.parameters(), lr=8e-6, betas=(0.5, 0.999), eps=1e-9, weight_decay=5e-4)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.5)
     criterion = nn.MSELoss(reduction='sum')
@@ -34,9 +34,11 @@ def main(args):
 
     for epoch in range(1, 201):
         for batch_no, values in enumerate(dataloader):
-            phi, chi, rot, inv_rot, data_type = values
-            pred = model(phi, rot, inv_rot, data_type)
-            loss = criterion(pred, chi)
+            pure_phi, angled_phi, chi, rot, inv_rot, mask = values
+            pred = model(pure_phi, angled_phi, rot, inv_rot, mask)
+            loss = torch.tensor(0).to(device, torch.float)
+            for res in pred:
+                loss += criterion(res, chi)
             loss.backward()
             optimizer.step()
             if batch_no % 40 == 0:
@@ -53,7 +55,8 @@ def main(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Rotation-free QSM')
-    parser.add_argument('--is-hybrid', action='store_true', default=False)
+    parser.add_argument('--hybrid', action='store_true', default=True)
+    parser.add_argument('--joint', action='store_true', default=False)
     parser.add_argument('--model', default='Unet', choices=['Unet', 'LPCNN'])
     parser.add_argument('--deblur-model', default='ResNet', choices=['LPCNN', 'Unet', 'PreNet3D', 'ResNet'])
     parser.add_argument('--batch-size', default=24, type=int)

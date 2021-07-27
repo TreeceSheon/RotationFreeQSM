@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 import nibabel as nib
+from pathlib import Path
 import scipy.io as scio
 
 
@@ -24,26 +25,28 @@ class TFIDataset(Dataset):
         for index, name in enumerate(self.names):
             fields = name.split(' ')
             data_type = 'pure_data' if fields[1].endswith('63') else 'angled_data'
-            chi_path = self.root_path / fields[0] / 'sus' / ('sus_' + fields[2] + '.nii')
-            mask_path = self.root_path / fields[0] / 'sus' / ('mask_' + fields[2] + '.nii')
+            chi_path = self.root_path / fields[0] / 'sus' / 'patches' / ('sus_' + fields[1] + '.nii')
+            mask_path = self.root_path / fields[0] / 'sus' / 'patches' / ('mask_' + fields[1] + '.nii')
             self.entries.append({
-                'phi': self.root_path / fields[0] / fields[1] /  ('field_' + fields[2] + '.nii'),
+                'pure_phi': self.root_path / fields[0] / 'ori_3_3' / 'patches' / ('field_' + fields[1] + '.nii'),
+                'angled_phi': self.root_path / fields[0] / 'ori_6_3' / 'patches' / ('field_' + fields[1] + '.nii'),
                 'chi': chi_path,
                 'mask': mask_path,
-                'rotation': self.root_path / fields[0] / fields[1] / 'rotation.mat',
-                'dipole': self.root_path / fields[0] / fields[1] / 'dipole.nii',
+                'rotation': self.root_path / fields[0] / 'ori_6_3' / 'rotation.mat',
                 'dtype': data_type
             })
 
     def __getitem__(self, index):
+
         pair = self.entries[index]
-        phi = torch.from_numpy(nib.load(str(pair['phi'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
+        pure_phi = torch.from_numpy(nib.load(str(pair['pure_phi'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
+        angled_phi = torch.from_numpy(nib.load(str(pair['angled_phi'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
         chi = torch.from_numpy(nib.load(str(pair['chi'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
         inv_rot = torch.from_numpy(np.flip(scio.loadmat(pair['rotation'])['inv_mat']).copy()[np.newaxis]).to(self.device, torch.float)
         rot = torch.from_numpy(np.flip(scio.loadmat(pair['rotation'])['mat']).copy()[np.newaxis]).to(self.device, torch.float)
-        dipole = torch.from_numpy(pair['dipole']).to(self.device, torch.float)
-        data_type = pair['dtype']
-        return phi, chi, rot, inv_rot, dipole, data_type
+        mask = torch.from_numpy(nib.load(str(pair['mask'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
+
+        return pure_phi, angled_phi, chi, rot, inv_rot, mask
 
     def __len__(self):
         return len(self.entries)
