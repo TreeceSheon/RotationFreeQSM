@@ -2,16 +2,16 @@ import torch
 import torch.nn as nn
 
 
-class DeepResNet(nn.Module):
-    def __init__(self, num_in, num_out, num_Ch=16, HG_depth=4):
-        super(DeepResNet, self).__init__()
+class ResNet(nn.Module):
+    def __init__(self, num_Ch=16, HG_depth=4):
+        super(ResNet, self).__init__()
         self.input_layer = nn.Sequential(
-            nn.Conv3d(num_in, num_Ch, 3, padding=1),
+            nn.Conv3d(1, 1, 3, padding=1),
             nn.BatchNorm3d(num_Ch),
             nn.ReLU(inplace=True),
         )
 
-        self.HG_depth = HG_depth
+        self.deepresnet = HG_depth
         self.MidLayers = []
 
         temp = list(range(1, HG_depth + 1))
@@ -21,12 +21,12 @@ class DeepResNet(nn.Module):
 
         self.MidLayers = nn.ModuleList(self.MidLayers)
 
-        self.output_layer = nn.Conv3d(num_Ch, num_out, 1, stride=1, padding=0)
+        self.output_layer = nn.Conv3d(num_Ch, 1, 1, stride=1, padding=0)
 
     def forward(self, x):
         INPUT = x
         x = self.input_layer(x)
-        temp = list(range(1, self.HG_depth + 1))
+        temp = list(range(1, self.deepresnet + 1))
         for encodingLayer in temp:
             temp_conv = self.MidLayers[encodingLayer - 1]
             x = temp_conv(x)

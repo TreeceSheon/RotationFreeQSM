@@ -17,16 +17,16 @@ def rotate(img: torch.Tensor, mat: torch.Tensor):
     :return: the rotated tensor.
 
     """
-    _, c, w, h, d = img.shape
+    b, _, w, h, d = img.shape
     max_dim = max(w, h, d)
 
     # cubic padding to avoid unreasonably stretching
     img = F.pad(img, [(max_dim - d) // 2, (max_dim - d) // 2, (max_dim - h) // 2,
                                                      (max_dim - h) // 2, (max_dim - w) // 2, (max_dim - w) // 2])
     # add no pure translation
-    pure_translation = torch.zeros(1, 3, 1).to(img.device)
+    pure_translation = torch.zeros(b, 3, 1).to(img.device)
 
-    affine_matrix = torch.cat([mat.squeeze(0), pure_translation], dim=2)
+    affine_matrix = torch.cat([mat.squeeze(1), pure_translation], dim=2)
     grid = F.affine_grid(affine_matrix, img.shape, align_corners=False)
     
     return F.grid_sample(input=img, grid=grid, mode='bilinear')

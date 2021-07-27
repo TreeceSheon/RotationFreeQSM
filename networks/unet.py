@@ -50,7 +50,7 @@ class Unet(nn.Module):
             res = self._output(mid)
             return res
 
-    def __init__(self, depth, base):
+    def __init__(self, depth=4, base=16):
         super(Unet, self).__init__()
         self.depth = depth
         self._input = Unet.Encoder(1, base)

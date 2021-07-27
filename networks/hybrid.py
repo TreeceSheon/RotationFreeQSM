@@ -1,7 +1,5 @@
-from unet import Unet
-from resnet import DeepResNet
 import torch.nn as nn
-from handy.py_rotate import rotate
+from handy.py_rotate.rotate import rotate
 
 
 class Hybrid(nn.Module):

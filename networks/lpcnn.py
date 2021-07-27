@@ -19,10 +19,8 @@ class wBasicBlock(nn.Module):
 
 
 class LPCNN(nn.Module):
-    def __init__(self, gt_mean, gt_std):
+    def __init__(self):
         super().__init__()
-        self.gt_mean = gt_mean
-        self.gt_std = gt_std
 
         self.iter_num = 3
 
@@ -70,8 +68,8 @@ class LPCNN(nn.Module):
                         0, dim3 - z_dim, 0, dim2 - y_dim, 0,
                         dim1 - x_dim)), dim=[2, 3, 4]), dim=[2, 3, 4]))[:, :, :x_dim, :y_dim, :z_dim]
 
-            x_input = ((pn_x_pred - self.gt_mean) / self.gt_std) * mask
+            x_input = pn_x_pred * mask
             x_pred = self.gen(x_input)
-            den_x_pred = ((x_pred * self.gt_std) + self.gt_mean) * mask
+            den_x_pred = x_pred * mask
 
         return x_pred
