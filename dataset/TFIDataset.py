@@ -33,20 +33,24 @@ class TFIDataset(Dataset):
                 'chi': chi_path,
                 'mask': mask_path,
                 'rotation': self.root_path / fields[0] / 'ori_6_3' / 'rotation.mat',
+                'dipole1': self.root_path / fields[0] / 'ori_3_3' / 'dipole.nii',
+                'dipole2': self.root_path / fields[0] / 'ori_6_3' / 'dipole.nii',
                 'dtype': data_type
             })
 
     def __getitem__(self, index):
 
-        pair = self.entries[index]
-        pure_phi = torch.from_numpy(nib.load(str(pair['pure_phi'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
-        angled_phi = torch.from_numpy(nib.load(str(pair['angled_phi'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
-        chi = torch.from_numpy(nib.load(str(pair['chi'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
-        inv_rot = torch.from_numpy(np.flip(scio.loadmat(pair['rotation'])['inv_mat']).copy()[np.newaxis]).to(self.device, torch.float)
-        rot = torch.from_numpy(np.flip(scio.loadmat(pair['rotation'])['mat']).copy()[np.newaxis]).to(self.device, torch.float)
-        mask = torch.from_numpy(nib.load(str(pair['mask'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
+        file_dict = self.entries[index]
+        pure_phi = torch.from_numpy(nib.load(str(file_dict['pure_phi'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
+        angled_phi = torch.from_numpy(nib.load(str(file_dict['angled_phi'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
+        chi = torch.from_numpy(nib.load(str(file_dict['chi'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
+        inv_rot = torch.from_numpy(np.flip(scio.loadmat(file_dict['rotation'])['inv_mat']).copy()[np.newaxis]).to(self.device, torch.float)
+        rot = torch.from_numpy(np.flip(scio.loadmat(file_dict['rotation'])['mat']).copy()[np.newaxis]).to(self.device, torch.float)
+        mask = torch.from_numpy(nib.load(str(file_dict['mask'])).get_fdata()[np.newaxis]).to(self.device, torch.float)
+        dipole1 = torch.from_numpy(nib.load(str(file_dict['dipole1'])).get_fdata())[np.newaxis].to(self.device, torch.float)
+        dipole2 = torch.from_numpy(nib.load(str(file_dict['dipole2'])).get_fdata())[np.newaxis].to(self.device, torch.float)
 
-        return pure_phi, angled_phi, chi, rot, inv_rot, mask
+        return pure_phi, angled_phi, chi, rot, inv_rot, (dipole1, dipole2), mask
 
     def __len__(self):
         return len(self.entries)

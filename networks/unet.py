@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
+from meta import AbstractModel
 
 
-class Unet(nn.Module):
+class Unet(AbstractModel):
 
     class Encoder(nn.Module):
 
@@ -61,7 +62,9 @@ class Unet(nn.Module):
                                         for i in range(depth, 0, -1)])
         self._output = nn.Conv3d(base, 1, 1, 1, 0)
 
-    def forward(self, x):
+    def forward(self, pure_phi, angled_phi=None, rot=None, inv_rot=None, dipole=None, mask=None):
+
+        x = pure_phi
         skips = []
         inEncoder = self._input(x)
         skips.append(inEncoder)
@@ -78,3 +81,6 @@ class Unet(nn.Module):
             inDecoder = decoder(inDecoder, skip)
 
         return self._output(inDecoder)
+
+    def calc_loss(self, *preds, label, crit):
+        return crit(preds[0], label)

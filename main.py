@@ -33,14 +33,10 @@ def main(args):
     start_time = time.time()
     for epoch in range(1, 201):
         for batch_no, values in enumerate(dataloader):
-            pure_phi, angled_phi, chi, rot, inv_rot, mask = values
-            # pred = model(pure_phi, angled_phi, rot, inv_rot, mask)
-            # loss = torch.tensor(0).to(device, torch.float)
-            # for res in pred:
-            #     loss += criterion(res, chi)
+            pure_phi, angled_phi, chi, rot, inv_rot, dipole, mask = values
+            pred = model(pure_phi, angled_phi, rot, inv_rot, dipole, mask)
+            loss = model.module.calc_loss(pred, label=chi, crit=criterion)
             optimizer.zero_grad()
-            pred = model(torch.cat([pure_phi, angled_phi], dim=0)) * torch.cat([mask, mask], dim=0)
-            loss = criterion(pred, torch.cat([chi, chi], dim=0))
             loss.backward()
             optimizer.step()
             if batch_no % 40 == 0:

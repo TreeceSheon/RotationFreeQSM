@@ -3,6 +3,7 @@ import torch.nn as nn
 
 
 class ResNet(nn.Module):
+
     def __init__(self, num_Ch=16, HG_depth=4):
         super(ResNet, self).__init__()
         self.input_layer = nn.Sequential(
@@ -17,6 +18,7 @@ class ResNet(nn.Module):
         temp = list(range(1, HG_depth + 1))
 
         for encodingLayer in temp:
+
             self.MidLayers.append(HG_block(num_Ch))
 
         self.MidLayers = nn.ModuleList(self.MidLayers)
@@ -24,6 +26,7 @@ class ResNet(nn.Module):
         self.output_layer = nn.Conv3d(num_Ch, 1, 1, stride=1, padding=0)
 
     def forward(self, x):
+
         INPUT = x
         x = self.input_layer(x)
         temp = list(range(1, self.deepresnet + 1))
@@ -32,10 +35,12 @@ class ResNet(nn.Module):
             x = temp_conv(x)
         x = self.output_layer(x)
         x = x + INPUT
+
         return x
 
 
 class HG_block(nn.Module):
+
     def __init__(self, num_Ch):
         super(HG_block, self).__init__()
         self.conv_res = nn.Sequential(
