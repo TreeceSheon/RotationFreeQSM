@@ -31,7 +31,6 @@ def main(args):
     criterion = nn.MSELoss(reduction='sum')
 
     start_time = time.time()
-    model.load_state_dict(torch.load('Unet_20.pkl', map_location='cuda')['model_state'])
     for epoch in range(1, 201):
         for batch_no, values in enumerate(dataloader):
             pure_phi, angled_phi, chi, rot, inv_rot, mask = values
