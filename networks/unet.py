@@ -82,5 +82,5 @@ class Unet(AbstractModel):
 
         return self._output(inDecoder)
 
-    def calc_loss(self, *preds, label, crit):
-        return crit(preds[0], label)
+    def calc_loss(self, preds, label, crit):
+        return crit(preds, label)

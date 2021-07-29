@@ -18,10 +18,28 @@ class wBasicBlock(nn.Module):
         self.conv2 = nn.Conv3d(planes, planes, 3, 1, 1, bias=False)
         self.bn2 = nn.BatchNorm3d(planes)
 
+    def forward(self, x):
+        residual = x
 
-class LPCNN(nn.Module):
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+
+        out = self.dropout(out)
+
+        out = self.conv2(out)
+        out = self.bn2(out)
+
+        out += residual
+        out = self.relu(out)
+
+        return out
+
+
+class LPCNN(AbstractModel):
+
     def __init__(self):
-        super().__init__()
+        super(LPCNN, self).__init__()
 
         self.iter_num = 3
 
@@ -77,4 +95,5 @@ class LPCNN(nn.Module):
                 x_pred = self.gen(x_input)
                 den_x_pred = x_pred * mask
             res.append(x_pred)
+
         return torch.cat(res, dim=0)

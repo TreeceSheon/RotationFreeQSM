@@ -7,7 +7,7 @@ class ResNet(nn.Module):
     def __init__(self, num_Ch=16, HG_depth=4):
         super(ResNet, self).__init__()
         self.input_layer = nn.Sequential(
-            nn.Conv3d(1, 1, 3, padding=1),
+            nn.Conv3d(1, num_Ch, 3, padding=1),
             nn.BatchNorm3d(num_Ch),
             nn.ReLU(inplace=True),
         )

@@ -4,10 +4,10 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 
-class PReNet(nn.Module):
+class PreNet2D(nn.Module):
 
     def __init__(self, recurrent_iter=6, use_GPU=True):
-        super(PReNet, self).__init__()
+        super(PreNet2D, self).__init__()
         self.iteration = recurrent_iter
         self.use_GPU = use_GPU
 
@@ -110,10 +110,10 @@ class PReNet(nn.Module):
         return x, x_list
 
 
-class PReNet3D(nn.Module):
+class PreNet(nn.Module):
 
     def __init__(self, recurrent_iter=6, use_GPU=True):
-        super(PReNet3D, self).__init__()
+        super(PreNet, self).__init__()
         self.iteration = recurrent_iter
         self.use_GPU = use_GPU
 
@@ -184,7 +184,6 @@ class PReNet3D(nn.Module):
             h = h.cuda()
             c = c.cuda()
 
-        x_list = []
         for i in range(self.iteration):
             x = torch.cat((input, x), 1)
             x = self.conv0(x)
@@ -211,6 +210,5 @@ class PReNet3D(nn.Module):
             x = self.conv(x)
 
             x = x + input
-            x_list.append(x)
 
-        return x, x_list
+        return x

@@ -14,18 +14,18 @@ def main(args):
     device = torch.device('cuda')
     path = Path('G:\data\\tfi\\')
     file = 'dataset/data.txt'
-    dataloader = DataLoader(TFIDataset(path, file), shuffle=True, batch_size=batch_size, drop_last=True)
+    dataloader = DataLoader(TFIDataset(path, file, device=device), shuffle=True, batch_size=batch_size, drop_last=True)
     print('training data size: ' + str(len(dataloader) * batch_size))
     if args.hybrid:
         model_name = 'hybrid'
         model_dipole_inv = getattr(import_module('networks.unet'), 'Unet')(4, 16)
         deblur_model = args.deblur_model
-        deblur_model = getattr(import_module('networks.' + deblur_model.lower()), deblur_model)
-        model = nn.DataParallel(Hybrid(model_dipole_inv, deblur_model, args.joint).to(device))
+        deblur_model = getattr(import_module('networks.' + deblur_model.lower()), deblur_model)()
+        model = nn.DataParallel(Hybrid(model_dipole_inv, deblur_model, args.joint)).to(device)
     else:
         model_name = args.model
         model = getattr(import_module('networks.' + model_name.lower()), model_name)()
-        model = nn.DataParallel(model)
+        model = nn.DataParallel(model).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=8e-6, betas=(0.5, 0.999), eps=1e-9, weight_decay=5e-4)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.5)
     criterion = nn.MSELoss(reduction='sum')
@@ -56,8 +56,8 @@ if __name__ == '__main__':
     parser.add_argument('--hybrid', action='store_true', default=False)
     parser.add_argument('--joint', action='store_true', default=False)
     parser.add_argument('--model', default='Unet', choices=['Unet', 'LPCNN'])
-    parser.add_argument('--deblur-model', default='ResNet', choices=['LPCNN', 'Unet', 'PreNet3D', 'ResNet'])
-    parser.add_argument('--batch-size', default=3, type=int)
+    parser.add_argument('--deblur-model', default='ResNet', choices=['LPCNN', 'Unet', 'PreNet', 'ResNet'])
+    parser.add_argument('--batch-size', default=1, type=int)
     parser.add_argument('--epoch', default=100, type=int)
     args = parser.parse_args()
 
