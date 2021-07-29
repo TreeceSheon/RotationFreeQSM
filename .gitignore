@@ -12,7 +12,10 @@ bin-release/
 *.air
 *.ipa
 *.apk
+*.nii
+*.pkl
 script.py
+test.py
 
 # Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
 # should NOT be excluded as they contain compiler settings and other important

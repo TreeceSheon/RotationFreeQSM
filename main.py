@@ -31,21 +31,24 @@ def main(args):
     criterion = nn.MSELoss(reduction='sum')
 
     start_time = time.time()
-
+    model.load_state_dict(torch.load('Unet_20.pkl', map_location='cuda')['model_state'])
     for epoch in range(1, 201):
         for batch_no, values in enumerate(dataloader):
             pure_phi, angled_phi, chi, rot, inv_rot, mask = values
-            pred = model(pure_phi, angled_phi, rot, inv_rot, mask)
-            loss = torch.tensor(0).to(device, torch.float)
-            for res in pred:
-                loss += criterion(res, chi)
+            # pred = model(pure_phi, angled_phi, rot, inv_rot, mask)
+            # loss = torch.tensor(0).to(device, torch.float)
+            # for res in pred:
+            #     loss += criterion(res, chi)
+            optimizer.zero_grad()
+            pred = model(torch.cat([pure_phi, angled_phi], dim=0)) * torch.cat([mask, mask], dim=0)
+            loss = criterion(pred, torch.cat([chi, chi], dim=0))
             loss.backward()
             optimizer.step()
             if batch_no % 40 == 0:
                 print({'epoch': epoch, 'batch_no': batch_no, 'lr_rate': optimizer.param_groups[0]['lr'],
                        'loss': loss.item(), 'time': int(time.time() - start_time)})
         scheduler.step()
-        if epoch % 50 == 0:
+        if epoch % 10 == 0:
             torch.save({'optim': optimizer.state_dict(),
                         'scheduler': scheduler.state_dict(),
                         'model_state': model.state_dict()}, model_name + '_' + str(epoch) + '.pkl'
@@ -55,11 +58,11 @@ def main(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Rotation-free QSM')
-    parser.add_argument('--hybrid', action='store_true', default=True)
+    parser.add_argument('--hybrid', action='store_true', default=False)
     parser.add_argument('--joint', action='store_true', default=False)
     parser.add_argument('--model', default='Unet', choices=['Unet', 'LPCNN'])
     parser.add_argument('--deblur-model', default='ResNet', choices=['LPCNN', 'Unet', 'PreNet3D', 'ResNet'])
-    parser.add_argument('--batch-size', default=24, type=int)
+    parser.add_argument('--batch-size', default=3, type=int)
     parser.add_argument('--epoch', default=100, type=int)
     args = parser.parse_args()
 
