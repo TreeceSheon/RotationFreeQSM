@@ -1,5 +1,6 @@
 import argparse
 import sys
+
 sys.path.append('networks')
 from importlib import import_module
 import torch
@@ -38,10 +39,11 @@ def main(args):
         model_dipole_inv.load_state_dict(torch.load('Unet_100.pkl', map_location=device)['model_state'], True)
         deblur_model = args.deblur_model
         model_name += deblur_model
-        deblur_model = nn.DataParallel(getattr(import_module('networks.' + deblur_model.lower()), deblur_model)()).to(device)
+        deblur_model = nn.DataParallel(getattr(import_module('networks.' + deblur_model.lower()), deblur_model)()).to(
+            device)
         model = Separate(model_dipole_inv, deblur_model)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr_rate, betas=(0.5, 0.999), eps=1e-9, weight_decay=5e-4)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.5)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
     criterion = nn.MSELoss(reduction='sum')
 
     start_time = time.time()
@@ -61,12 +63,11 @@ def main(args):
         if epoch % 10 == 0:
             torch.save({'optim': optimizer.state_dict(),
                         'scheduler': scheduler.state_dict(),
-                        'model_state': model.state_dict()}, model_name + '_64' + str(epoch) + '.pkl'
+                        'model_state': model.state_dict()}, model_name + str(epoch) + '.pkl'
                        )
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser(description='Rotation-free QSM')
     parser.add_argument('--mode', default='hybrid', choices=['hybrid', 'whole', 'separate'])
     parser.add_argument('--joint', action='store_true', default=False)
