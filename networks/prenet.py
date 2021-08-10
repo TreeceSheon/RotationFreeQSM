@@ -185,6 +185,7 @@ class PreNet(nn.Module):
             c = c.cuda()
 
         for i in range(self.iteration):
+
             x = torch.cat((input, x), 1)
             x = self.conv0(x)
 

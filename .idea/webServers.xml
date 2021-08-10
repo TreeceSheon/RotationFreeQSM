@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="2143486f-969c-4595-aa0e-d5c6264834d9" name="wiener_zx">
+        <fileTransfer rootFolder="/scratch/itee/uqzxion3" accessType="SFTP" host="wiener.hpc.dc.uq.edu.au" port="22" sshConfigId="c3cc09a9-eb0e-4246-9de3-216bb0ddb1f1" sshConfig="uqzxion3@wiener.hpc.dc.uq.edu.au:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

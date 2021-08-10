@@ -18,7 +18,7 @@ class wBasicBlock(nn.Module):
         self.conv2 = nn.Conv3d(planes, planes, 3, 1, 1, bias=False)
         self.bn2 = nn.BatchNorm3d(planes)
 
-    def forward(self, x):
+    def train_model(self, x):
         residual = x
 
         out = self.conv1(x)
@@ -38,8 +38,9 @@ class wBasicBlock(nn.Module):
 
 class LPCNN(AbstractModel):
 
-    def __init__(self):
-        super(LPCNN, self).__init__()
+    def __init__(self, mode='train'):
+        keys = ('pure_phi', 'angled_phi', 'dipole1', 'dipole2', 'mask')
+        super(LPCNN, self).__init__(keys, mode)
 
         self.iter_num = 3
 
@@ -62,20 +63,20 @@ class LPCNN(AbstractModel):
             layers.append(block())
         return nn.Sequential(*layers)
 
-    # def forward(self, init_chi, y, dk, mask):
-    def forward(self, pure_phi, angled_phi, rot, inv_rot, dipole, mask):
+    def train_model(self, values):
+        pure_phi, angled_phi, dipole1, dipole2, mask = values
         yy = (pure_phi, angled_phi)
+        dipoles = (dipole1, dipole2)
         res = []
         for i in range(2):
             y = yy[i]
-            dk = dipole[i]
+            dk = dipoles[i]
             batch_size, _, x_dim, y_dim, z_dim, = y.shape
 
             dim1 = dk.shape[2]
             dim2 = dk.shape[3]
             dim3 = dk.shape[4]
-            temp = dk * fft.fftn(
-                F.pad(y, (0, dim3 - z_dim, 0, dim2 - y_dim, 0, dim1 - x_dim)), dim=[2, 3, 4])
+            temp = dk * fft.fftn(F.pad(y, (0, dim3 - z_dim, 0, dim2 - y_dim, 0, dim1 - x_dim)), dim=[2, 3, 4])
             x_est = self.alpha * torch.real(fft.ifftn(temp)[:, :, :x_dim, :y_dim, :z_dim])
             # x_est += init_chi - self.alpha * torch.real(fft.ifftn(
             #             dk * dk * fft.fftn(F.pad(init_chi, (

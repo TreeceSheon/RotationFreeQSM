@@ -52,7 +52,8 @@ class Unet(AbstractModel):
             return res
 
     def __init__(self, depth=4, base=16):
-        super(Unet, self).__init__()
+        keys = ('pure_phi', )
+        super(Unet, self).__init__(keys)
         self.depth = depth
         self._input = Unet.Encoder(1, base)
         self._encoders = nn.ModuleList([nn.Sequential(nn.MaxPool3d(2),
@@ -62,7 +63,7 @@ class Unet(AbstractModel):
                                         for i in range(depth, 0, -1)])
         self._output = nn.Conv3d(base, 1, 1, 1, 0)
 
-    def forward(self, pure_phi, angled_phi=None, rot=None, inv_rot=None, dipole=None, mask=None):
+    def train_model(self, pure_phi):
 
         x = pure_phi
         skips = []
