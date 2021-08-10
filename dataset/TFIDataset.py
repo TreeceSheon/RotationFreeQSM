@@ -21,6 +21,7 @@ class TFIDataset(Dataset):
         self.names = get_ids(file)
         self.device = device
         self.keys = keys
+        self.label = 'chi'
         self.entries = []
         for index, name in enumerate(self.names):
             fields = name.split(' ')
@@ -43,8 +44,8 @@ class TFIDataset(Dataset):
             raise KeyError('keys for items selection not specified.')
         for key in self.keys:
             items.append(self.select_item(key, index))
-
-        return items
+        label = self.select_item('chi', index)
+        return items, label
 
     def __len__(self):
         return len(self.entries)

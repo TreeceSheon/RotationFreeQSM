@@ -47,9 +47,9 @@ def main(args):
     start_time = time.time()
     for epoch in range(1, 201):
         print(epoch)
-        for batch_no, values in enumerate(dataloader):
+        for batch_no, (items, chi) in enumerate(dataloader):
             optimizer.zero_grad()
-            pred = model(values)
+            pred = model(items)
             loss = model.module.calc_loss(pred, label=chi, crit=criterion)
             optimizer.zero_grad()
             loss.backward()

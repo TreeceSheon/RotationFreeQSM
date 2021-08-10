@@ -39,7 +39,7 @@ class wBasicBlock(nn.Module):
 class LPCNN(AbstractModel):
 
     def __init__(self, mode='train'):
-        keys = ('pure_phi', 'angled_phi', 'dipole1', 'dipole2', 'mask')
+        keys = ('pure_phi', 'angled_phi', 'pure_dipole', 'angled_dipole', 'mask')
         super(LPCNN, self).__init__(keys, mode)
 
         self.iter_num = 3

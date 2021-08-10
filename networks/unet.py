@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from meta import AbstractModel
+from py_rotate.rotate import rotate
 
 
 class Unet(AbstractModel):
@@ -52,7 +53,7 @@ class Unet(AbstractModel):
             return res
 
     def __init__(self, depth=4, base=16):
-        keys = ('pure_phi', )
+        keys = ('pure_phi', 'angled_phi', 'mat', 'inv_mat', 'mask')
         super(Unet, self).__init__(keys)
         self.depth = depth
         self._input = Unet.Encoder(1, base)
@@ -63,9 +64,10 @@ class Unet(AbstractModel):
                                         for i in range(depth, 0, -1)])
         self._output = nn.Conv3d(base, 1, 1, 1, 0)
 
-    def train_model(self, pure_phi):
-
-        x = pure_phi
+    def train_model(self, pure_phi, angled_phi, mat, inv_mat, mask):
+        b_n = pure_phi.shape[0]
+        rot_phi = rotate(angled_phi, mat)
+        x = torch.cat([rot_phi, pure_phi], dim=0)
         skips = []
         inEncoder = self._input(x)
         skips.append(inEncoder)
@@ -81,7 +83,9 @@ class Unet(AbstractModel):
         for decoder, skip in zip(self._decoders, skips):
             inDecoder = decoder(inDecoder, skip)
 
-        return self._output(inDecoder)
+        res = self._output(inDecoder)
+        res[: b_n] = rotate(res[:, b_n], inv_mat)
+        return res * torch.cat([mask, mask], dim=0)
 
     def calc_loss(self, preds, label, crit):
-        return crit(preds, label)
+        return crit(preds, torch.cat([label, label], dim=0))
